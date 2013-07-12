@@ -12,6 +12,11 @@
 
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
     <UIRef Id="WixUI_InstallDir"/>
+
+    <CustomAction Id="SetProperty_InstallLocation" Property="ARPINSTALLLOCATION" Value="[INSTALLFOLDER]"/>
+    <InstallExecuteSequence>
+      <Custom Action="SetProperty_InstallLocation" After="InstallValidate">NOT Installed</Custom>
+    </InstallExecuteSequence>
   </Product>
 
   <Fragment>
