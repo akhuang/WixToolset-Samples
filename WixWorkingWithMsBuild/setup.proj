@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+
+  <PropertyGroup>
+    <BuildFolder>$(MSBuildProjectDirectory)\build</BuildFolder>
+    <CompileFolder>$(BuildFolder)\compile</CompileFolder>
+    <DeployFolder>$(BuildFolder)\deploy</DeployFolder>
+
+    <Configuration>Debug</Configuration>
+    <OutputPath>$(CompileFolder)</OutputPath>
+    <OutputName>test</OutputName>
+    <BuildPlatform Condition="$(BuildPlatform) == ''">x86</BuildPlatform>
+
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <EnableProjectHarvesting>True</EnableProjectHarvesting>
+    <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
+    <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
+  </PropertyGroup>
+  <Import Project="$(WixTargetsPath)" />
+  <ItemGroup>
+    <ProjectReference Include="WixWorkingWithMsBuild.Installer\WixWorkingWithMsBuild.Installer.wixproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <HeatProject Include="WixWorkingWithMsBuild\WixWorkingWithMsBuild.csproj" >
+      <ProjectOutputGroups>Binaries;Sources</ProjectOutputGroups>
+    </HeatProject>
+  </ItemGroup>
+
+  <Target Name="Build">
+    <CallTarget Targets="Clean"></CallTarget>
+    <CallTarget Targets="Compile"></CallTarget>
+    <CallTarget Targets="BeforeBuild"></CallTarget>
+    <!--<CallTarget Targets="MsDeploy"></CallTarget>-->
+  </Target>
+
+  <Target Name="Clean">
+    <MSBuild Projects="@(ProjectReference)" BuildInParallel="true" Targets="Clean"></MSBuild>
+    <RemoveDir  Directories="$(BuildFolder)" ContinueOnError="true"></RemoveDir>
+  </Target>
+
+  <Target Name="Compile">
+    <MSBuild Projects="@(ProjectReference)" Targets="Build" Properties="Configuration=$(Configuration);OutputPath=$(OutputPath)">
+    </MSBuild>
+    <ItemGroup>
+      <!--<DllReferences Include="$(CompileFolder)\**\*"></DllReferences>-->
+    </ItemGroup>
+  </Target>
+
+  <Target Name="BeforeBuild">
+    <HeatDirectory Directory="WixWorkingWithMsBuild_Compile"
+                    ToolPath="$(WixToolPath)"
+                 OutputFile="HeatGeneratedFileList.wxs"
+                 ComponentGroupName="HeatGenerated"
+                 DirectoryRefId="INSTALLFOLDER"
+                 AutogenerateGuids="true"
+                 SuppressFragments="true"
+                 SuppressRegistry="true"
+                 SuppressRootDirectory="true"/>
+  </Target>
+
+  <Target Name="MsDeploy" DependsOnTargets="Compile" >
+
+    <Copy SourceFiles="@(SoureFiles)" DestinationFolder="$(DeployFolder)\%(RecursiveDir)"></Copy>
+  </Target>
+
+</Project>
